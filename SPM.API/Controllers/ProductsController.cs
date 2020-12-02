@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using SPM.API.Dtos;
 using SPM.API.Models;
 using SPM.API.Repository;
 using Newtonsoft.Json.Serialization;
+using SPM.API.Configuration;
 
 namespace SPM.API.Controllers
 {
@@ -19,17 +22,35 @@ namespace SPM.API.Controllers
     {
         private readonly IProductRepo _repository;
         private IMapper _mapper;
+        private FeaturesConfig _featuresConfig;
+        //private readonly HttpClient _httpClient;
+        //private ExternalServicesConfig _externalServicesConfig;
 
-        public ProductsController(IProductRepo repository, IMapper mapper)
+        //public ProductsController(IProductRepo repository, IMapper mapper, IOptions<FeaturesConfig> options, HttpClient httpClient, IOptionsMonitor<ExternalServicesConfig> externalServicesOptions)
+        public ProductsController(IProductRepo repository, IMapper mapper, IOptions<FeaturesConfig> options) 
         {
+
             _repository = repository;
             _mapper = mapper;
+            _featuresConfig = options.Value;
+
+            //var externalServicesConfig = externalServicesOptions.Get(ExternalServicesConfig.WeatherApi);
+
+            //httpClient.BaseAddress = new Uri(externalServicesConfig.Url);
+            //_httpClient = httpClient;
         }
 
         //GET api/products
         [HttpGet]
         public ActionResult<IEnumerable<ProductReadDto>> GetAllProducts()
         {
+            var enableWeatherForecast =_featuresConfig.EnableWeatherForecast;
+            var enableGreeting =_featuresConfig.EnableGreeting;
+            var forecastSectionTitle = _featuresConfig.ForecastSectionTitle;
+
+            //var url = _httpClient;
+
+
             var productItems = _repository.GetAllProducts();
             return Ok(_mapper.Map<IEnumerable<ProductReadDto>>(productItems));
         }
@@ -70,7 +91,7 @@ namespace SPM.API.Controllers
             var productModelFromRepo = _repository.GetProductById(id);
             if (productModelFromRepo == null)
             {
-                return NotFound();
+                return NotFound("Couldn't find the Product");
             }
 
             _mapper.Map(productUpdateDto, productModelFromRepo);

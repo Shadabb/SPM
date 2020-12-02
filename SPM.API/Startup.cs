@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Serialization;
+using SPM.API.Configuration;
 using SPM.API.Data;
 using SPM.API.Repository;
 
@@ -36,7 +37,13 @@ namespace SPM.API
             services.AddDbContext<ProductContext>(opt => opt.UseSqlServer(
                 Configuration.GetConnectionString("ProductConnection")
                 ));
-            
+
+            services.Configure<FeaturesConfig>(Configuration.GetSection("Features:HomePage"));
+
+            //Using Named Options
+            services.Configure<ExternalServicesConfig>(ExternalServicesConfig.WeatherApi, Configuration.GetSection("ExternalServices:WeatherApiUrl"));
+            services.Configure<ExternalServicesConfig>(ExternalServicesConfig.ProductApi, Configuration.GetSection("ExternalServices:ProductApiUrl"));
+
             services.AddControllers().AddNewtonsoftJson(s =>
             {
                 s.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
